@@ -2,7 +2,7 @@ import flet as ft
 import requests
 
 # Set this to your actual deployed Render URL
-BACKEND_URL = "https://your-render-backend-name.onrender.com"
+BACKEND_URL = "https://syncyolyrics.onrender.com/download"
 
 def main(page: ft.Page):
     page.title = "syncYolyrics"
