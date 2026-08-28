@@ -1,76 +1,105 @@
-import flet as ft
-import requests
 import os
+import re
+import requests
+import flet as ft
 
-# Replace with your actual live Render URL
-API_URL = "https://syncyolyrics.onrender.com/download"
+# Set this to your exact Render API endpoint (e.g., /lyrics or /download)
+BACKEND_URL = "https://YOUR-RENDER-BACKEND-URL.onrender.com/lyrics"
+
+
+def save_lrc_file(song_name: str, lyrics_content: str) -> str:
+    # Clean invalid filename characters (e.g., / \ : * ? " < > |)
+    safe_name = re.sub(r'[\\/*?:"<>|]', "", song_name).strip()
+    if not safe_name:
+        safe_name = "synced_lyrics"
+
+    # Target the 'lrc_files' folder in main Internal Storage
+    target_dir = "/storage/emulated/0/lrc_files"
+
+    # Fallback for PC testing if Android storage path isn't present
+    if not os.path.exists("/storage/emulated/0"):
+        target_dir = os.path.join(os.getcwd(), "lrc_files")
+
+    # Automatically create the 'lrc_files' directory if it does not exist
+    os.makedirs(target_dir, exist_ok=True)
+
+    file_path = os.path.join(target_dir, f"{safe_name}.lrc")
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(lyrics_content)
+
+    return file_path
+
 
 def main(page: ft.Page):
-    page.title = "Lyrics Downloader"
+    page.title = "syncYolyrics"
+    page.theme_mode = ft.ThemeMode.DARK
     page.padding = 20
 
-    status_text = ft.Text("", size=14)
-
-    # Clears status text as soon as the user starts typing a new song
-    def on_text_change(e):
-        status_text.value = ""
-        page.update()
-
     song_input = ft.TextField(
-        label="Enter Song Name (e.g., Timeless Weeknd)",
-        width=350,
-        on_change=on_text_change
+        label="Song Title / Artist",
+        hint_text="e.g., Blinding Lights - The Weeknd",
+        expand=True,
     )
+    status_text = ft.Text(size=14)
 
-    def download_lyrics(e):
-        if not song_input.value.strip():
+    def download_click(e):
+        query = song_input.value.strip()
+        if not query:
             status_text.value = "Please enter a song name."
-            status_text.color = "red"
+            status_text.color = ft.Colors.RED_400
             page.update()
             return
 
-        query = song_input.value.strip()
-        
-        # Immediate UI feedback to signal the search started
-        status_text.value = f"Searching lyrics for '{query}'..."
-        status_text.color = "blue"
+        status_text.value = "Searching and downloading synced lyrics..."
+        status_text.color = ft.Colors.BLUE_400
         page.update()
 
         try:
-            response = requests.get(API_URL, params={"query": query}, timeout=30)
-            
+            response = requests.get(
+                BACKEND_URL, params={"query": query}, timeout=15
+            )
+
             if response.status_code == 200:
-                safe_name = "".join(c for c in query if c.isalnum() or c in (" ", "_", "-")).strip()
-                
-                android_path = "/sdcard/Download"
-                if os.path.exists(android_path):
-                    file_path = f"{android_path}/{safe_name}.txt"
+                data = response.json()
+                lyrics = data.get("lyrics")
+
+                if lyrics:
+                    saved_path = save_lrc_file(query, lyrics)
+                    status_text.value = (
+                        f"Saved successfully!\nLocation: {saved_path}"
+                    )
+                    status_text.color = ft.Colors.GREEN_400
                 else:
-                    file_path = f"{safe_name}.txt"
-
-                with open(file_path, "wb") as f:
-                    f.write(response.content)
-
-                status_text.value = f"Saved: {safe_name}.txt!"
-                status_text.color = "green"
-            elif response.status_code == 404:
-                status_text.value = "Lyrics not found. Try adding the main artist name (e.g., The Weeknd Timeless)."
-                status_text.color = "orange"
+                    status_text.value = "No synced lyrics found for this song."
+                    status_text.color = ft.Colors.ORANGE_400
             else:
-                status_text.value = f"Error: Server returned status code {response.status_code}"
-                status_text.color = "red"
+                status_text.value = (
+                    f"Server returned error code: {response.status_code}"
+                )
+                status_text.color = ft.Colors.RED_400
 
-        except Exception as err:
-            status_text.value = f"Connection Error: {err}"
-            status_text.color = "red"
+        except Exception as ex:
+            status_text.value = f"Error: {str(ex)}"
+            status_text.color = ft.Colors.RED_400
 
         page.update()
 
     page.add(
-        ft.Text("Synced Lyrics Downloader (.txt)", size=20, weight="bold"),
-        song_input,
-        ft.ElevatedButton("Download Lyrics", on_click=download_lyrics),
-        status_text
+        ft.Column(
+            [
+                ft.Text("syncYolyrics", size=26, weight=ft.FontWeight.BOLD),
+                ft.Row([song_input]),
+                ft.ElevatedButton(
+                    "Download .lrc",
+                    icon=ft.Icons.DOWNLOAD,
+                    on_click=download_click,
+                ),
+                ft.Divider(),
+                status_text,
+            ],
+            spacing=15,
+        )
     )
 
 ft.app(target=main)
