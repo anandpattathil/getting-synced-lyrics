@@ -14,11 +14,11 @@ def get_lyrics(query: str):
     try:
         # 1. Clean filename of invalid characters
         safe_query = "".join(c for c in query if c.isalnum() or c in (" ", "_", "-")).strip()
-        txt_filename = f"{safe_query}.txt"  # Changed to .txt
+        txt_filename = f"{safe_query}.txt"
 
-        # 2. Search for synced lyrics
+        # 2. Search for synced lyrics across multiple providers
         print(f"Fetching synced lyrics for: {query}...")
-        lyrics_text = syncedlyrics.search(query)
+        lyrics_text = syncedlyrics.search(query, providers=['Lrclib', 'NetEase', 'Megalobiz'])
 
         if not lyrics_text:
             raise HTTPException(status_code=404, detail="Synced lyrics not found for this song.")
@@ -34,6 +34,8 @@ def get_lyrics(query: str):
             media_type="text/plain"
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error fetching lyrics: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Server Error: {str(e)}")
