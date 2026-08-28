@@ -4,7 +4,7 @@ import requests
 import flet as ft
 
 # Set this to your exact Render API endpoint (e.g., /lyrics or /download)
-BACKEND_URL = "https://YOUR-RENDER-BACKEND-URL.onrender.com/lyrics"
+BACKEND_URL = "https://syncyolyrics.onrender.com/download"
 
 
 def save_lrc_file(song_name: str, lyrics_content: str) -> str:
@@ -32,9 +32,11 @@ def save_lrc_file(song_name: str, lyrics_content: str) -> str:
 
 
 def main(page: ft.Page):
-    page.title = "syncYolyrics"
+    page.title = "syncYoLyrics"
     page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 20
+
+    # Increase 'top' value to push everything lower on the screen
+    page.padding = ft.padding.only(top=80, left=20, right=20, bottom=20)
 
     song_input = ft.TextField(
         label="Song Title / Artist",
