@@ -1,41 +1,21 @@
-import os
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI
 import syncedlyrics
 
 app = FastAPI()
 
 @app.get("/")
-def home():
-    return {"status": "Lyrics API is live. Go to /docs to test endpoints."}
+def read_root():
+    return {"status": "syncYolyrics API is online"}
 
-@app.get("/download")
-def get_lyrics(query: str):
+@app.get("/search")
+def search_lyrics(query: str):
+    if not query:
+        return {"success": False, "message": "Search query cannot be empty."}
+    
     try:
-        # 1. Clean filename of invalid characters
-        safe_query = "".join(c for c in query if c.isalnum() or c in (" ", "_", "-")).strip()
-        txt_filename = f"{safe_query}.txt"
-
-        # 2. Search for synced lyrics across multiple providers
-        print(f"Fetching synced lyrics for: {query}...")
-        lyrics_text = syncedlyrics.search(query, providers=['Lrclib', 'NetEase', 'Megalobiz'])
-
-        if not lyrics_text:
-            raise HTTPException(status_code=404, detail="Synced lyrics not found for this song.")
-
-        # 3. Save to a temporary .txt file
-        with open(txt_filename, "w", encoding="utf-8") as f:
-            f.write(lyrics_text)
-
-        # 4. Return the .txt file to client
-        return FileResponse(
-            path=txt_filename,
-            filename=txt_filename,
-            media_type="text/plain"
-        )
-
-    except HTTPException:
-        raise
+        lrc = syncedlyrics.search(query)
+        if lrc:
+            return {"success": True, "lyrics": lrc}
+        return {"success": False, "message": "No synced lyrics found for this track."}
     except Exception as e:
-        print(f"Error fetching lyrics: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Server Error: {str(e)}")
+        return {"success": False, "message": f"Search error: {str(e)}"}
