@@ -36,7 +36,7 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
 
     # Increase 'top' value to push everything lower on the screen
-    page.padding = ft.padding.only(top=80, left=20, right=20, bottom=20)
+    page.padding = ft.Padding.only(top=80, left=20, right=20, bottom=20)
 
     song_input = ft.TextField(
         label="Song Title / Artist",
