@@ -27,20 +27,13 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Isolate Mobile Dependencies
+      - name: Install Build Tools
         run: |
-          printf "flet\nrequests\n" > requirements.txt
-
-      - name: Install Flet CLI
-        run: |
-          pip install flet
+          pip install flet requests
 
       - name: Build APK
         run: |
-          flet build apk --module-name app --product "syncYoLyrics" --yes \
-            --android-permissions "android.permission.WRITE_EXTERNAL_STORAGE=True" \
-            --android-permissions "android.permission.READ_EXTERNAL_STORAGE=True" \
-            --android-permissions "android.permission.MANAGE_EXTERNAL_STORAGE=True"
+          flet build apk --module-name app --product "syncYoLyrics" --yes
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
