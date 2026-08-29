@@ -1,8 +1,8 @@
 import flet as ft
 import requests
 
-# Set this to your actual deployed Render URL
-BACKEND_URL = "https://syncyolyrics.onrender.com/download"
+# Clean base URL without trailing endpoints or slashes
+BACKEND_URL = "https://syncyolyrics.onrender.com"
 
 def main(page: ft.Page):
     page.title = "syncYolyrics"
@@ -48,7 +48,7 @@ def main(page: ft.Page):
             response = requests.get(
                 f"{BACKEND_URL}/search",
                 params={"query": query},
-                timeout=20
+                timeout=60
             )
 
             if response.status_code == 200:
