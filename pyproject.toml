@@ -1,0 +1,13 @@
+[project]
+name = "syncYoLyrics"
+version = "1.0.0"
+dependencies = [
+    "flet",
+    "requests"
+]
+
+[tool.flet.android.permission]
+"android.permission.INTERNET" = true
+"android.permission.READ_EXTERNAL_STORAGE" = true
+"android.permission.WRITE_EXTERNAL_STORAGE" = true
+"android.permission.MANAGE_EXTERNAL_STORAGE" = true
