@@ -37,7 +37,10 @@ jobs:
 
       - name: Build APK
         run: |
-          flet build apk --module-name app --product "syncYoLyrics" --yes
+          flet build apk --module-name app --product "syncYoLyrics" --yes \
+            --android-permissions "android.permission.WRITE_EXTERNAL_STORAGE=True" \
+            --android-permissions "android.permission.READ_EXTERNAL_STORAGE=True" \
+            --android-permissions "android.permission.MANAGE_EXTERNAL_STORAGE=True"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
