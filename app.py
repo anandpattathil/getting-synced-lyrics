@@ -1,7 +1,7 @@
 import flet as ft
 import requests
+import os
 
-# Clean base URL without trailing endpoints or slashes
 BACKEND_URL = "https://syncyolyrics.onrender.com"
 
 def main(page: ft.Page):
@@ -54,10 +54,26 @@ def main(page: ft.Page):
             if response.status_code == 200:
                 data = response.json()
                 if data.get("success"):
-                    status_text.value = "Lyrics downloaded successfully!"
-                    status_text.color = ft.Colors.GREEN_400
-                    lyrics_display.value = data.get("lyrics", "")
+                    lyrics_text = data.get("lyrics", "")
+                    lyrics_display.value = lyrics_text
                     lyrics_display.visible = True
+
+                    # Target direct root internal storage folder: /storage/emulated/0/lrc_files
+                    try:
+                        save_dir = "/storage/emulated/0/lrc_files"
+                        os.makedirs(save_dir, exist_ok=True)
+                        
+                        safe_name = "".join(c for c in query if c.isalnum() or c in (" ", "_", "-")).strip()
+                        file_path = os.path.join(save_dir, f"{safe_name}.lrc")
+
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write(lyrics_text)
+
+                        status_text.value = f"Saved to lrc_files/{safe_name}.lrc"
+                        status_text.color = ft.Colors.GREEN_400
+                    except Exception as save_err:
+                        status_text.value = f"Lyrics fetched, but save failed: {str(save_err)}"
+                        status_text.color = ft.Colors.AMBER_400
                 else:
                     status_text.value = data.get("message", "Lyrics not found.")
                     status_text.color = ft.Colors.RED_400
